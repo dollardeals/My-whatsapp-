@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reactivation Loom — Customer Sales System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#232820;
+    --paper:#F7F5EE;
+    --card:#FFFFFF;
+    --thread:#157A55;      /* action green — dyed thread */
+    --thread-dark:#0E5C40;
+    --madder:#B4432F;      /* warning red */
+    --wool:#8A8577;        /* muted */
+    --line:#E4E0D4;
+    --gold:#B98A2F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.5}
+
+  /* woven header stripe — the signature */
+  .loom-stripe{height:10px;background:repeating-linear-gradient(90deg,var(--thread) 0 18px,var(--ink) 18px 22px,var(--gold) 22px 30px,var(--ink) 30px 34px)}
+
+  header{padding:20px 16px 14px;max-width:960px;margin:0 auto}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:26px;letter-spacing:-.02em}
+  .sub{color:var(--wool);font-size:13px;margin-top:2px}
+
+  main{max-width:960px;margin:0 auto;padding:0 16px 80px}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 18px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+  .stat b{display:block;font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .stat span{font-size:11px;color:var(--wool);text-transform:uppercase;letter-spacing:.05em}
+  .stat.orders b{color:var(--thread)}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+  .tab{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--wool);cursor:pointer;white-space:nowrap}
+  .tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  .panel{display:none}
+  .panel.active{display:block}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:6px}
+  .hint{font-size:13px;color:var(--wool);margin-bottom:10px}
+
+  textarea,input[type=text],select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:14px;background:#FDFCF9;color:var(--ink)}
+  textarea:focus,input:focus,select:focus{outline:2px solid var(--thread);outline-offset:1px}
+  textarea{min-height:110px;resize:vertical}
+  label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--wool);display:block;margin:10px 0 4px}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;background:var(--ink);color:var(--paper)}
+  .btn.green{background:var(--thread)}
+  .btn.green:active{background:var(--thread-dark)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn.small{padding:6px 10px;font-size:12px;border-radius:6px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  /* contact rows */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .toolbar select{width:auto;flex:1;min-width:120px}
+  .search{flex:2;min-width:140px}
+
+  .contact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .c-name{font-weight:700;font-size:15px}
+  .c-meta{font-size:12px;color:var(--wool)}
+  .badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .badge.new{background:#EEEBDF;color:var(--wool)}
+  .badge.s1{background:#E3EFE9;color:var(--thread-dark)}
+  .badge.s2{background:#DBEAE2;color:var(--thread-dark)}
+  .badge.s3{background:#CFE4D8;color:var(--thread-dark)}
+  .badge.replied{background:#FDF3DC;color:var(--gold)}
+  .badge.ordered{background:var(--thread);color:#fff}
+  .badge.optout{background:#F6DEDA;color:var(--madder)}
+
+  /* stitch stepper */
+  .stitches{display:flex;gap:4px;margin:8px 0}
+  .stitch{height:5px;flex:1;border-radius:3px;background:var(--line)}
+  .stitch.done{background:var(--thread)}
+  .stitch.gold{background:var(--gold)}
+
+  .c-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+  .empty{text-align:center;padding:36px 16px;color:var(--wool)}
+  .empty b{font-family:'Fraunces',serif;font-size:17px;color:var(--ink);display:block;margin-bottom:4px}
+
+  .warn{background:#FBF1EF;border:1px solid #EFCFC8;color:var(--madder);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
+  .warn.show{display:block}
+
+  .tpl-block{margin-bottom:16px}
+  .tag{display:inline-block;background:#EEEBDF;border-radius:5px;padding:1px 7px;font-size:12px;font-weight:600;color:var(--ink)}
+
+  .note{font-size:12px;color:var(--wool);margin-top:8px}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1}
+
+  @media (min-width:720px){
+    .stats{grid-template-columns:repeat(4,1fr)}
+    .contact{display:block}
+  }
+</style>
+</head>
+<body>
+<div class="loom-stripe"></div>
+<header>
+  <h1>Reactivation Loom</h1>
+  <div class="sub">Turn past customers into repeat sales — WhatsApp, no ad spend</div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><b id="stTotal">0</b><span>Contacts</span></div>
+    <div class="stat"><b id="stSent">0</b><span>Messaged</span></div>
+    <div class="stat"><b id="stReplied">0</b><span>Replied</span></div>
+    <div class="stat orders"><b id="stOrdered">0</b><span>Orders</span></div>
+  </div>
+
+  <div class="warn" id="dailyWarn">⚠️ You've opened <b id="dailyCount">0</b> chats today. Keep it under ~50/day and vary your wording — WhatsApp can flag bulk identical messages.</div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="contacts">Contacts</button>
+    <button class="tab" data-panel="import">Add contacts</button>
+    <button class="tab" data-panel="templates">Messages</button>
+    <button class="tab" data-panel="guide">Plan</button>
+  </div>
+
+  <!-- CONTACTS -->
+  <section class="panel active" id="panel-contacts">
+    <div class="toolbar">
+      <input type="text" class="search" id="search" placeholder="Search name or number…">
+      <select id="filter">
+        <option value="all">All</option>
+        <option value="new">Not messaged</option>
+        <option value="due">Due next message</option>
+        <option value="replied">Replied</option>
+        <option value="ordered">Ordered</option>
+        <option value="optout">Opted out</option>
+      </select>
+    </div>
+    <div id="list"></div>
+    <div class="empty" id="emptyState">
+      <b>No contacts yet</b>
+      Go to “Add contacts” and paste your customer list — takes 30 seconds.
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ghost" id="exportBtn">Export CSV</button>
+      <button class="btn ghost" id="clearBtn" style="color:var(--madder)">Delete all data</button>
+    </div>
+  </section>
+
+  <!-- IMPORT -->
+  <section class="panel" id="panel-import">
+    <div class="card">
+      <h2>Paste your customers</h2>
+      <div class="hint">One customer per line: <span class="tag">Name, Phone, Product</span> — product is optional. UK numbers starting 07… are converted automatically. Pakistani numbers starting 03… also work.</div>
+      <textarea id="importBox" placeholder="Sarah, 07911123456, fluffy rug
+Ahmed, 07700900123, bedding set
+Emma, +447800112233"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn green" id="importBtn">Add contacts</button>
+      </div>
+      <div class="note" id="importNote"></div>
+    </div>
+    <div class="card">
+      <h2>Add one manually</h2>
+      <label>Name</label><input type="text" id="mName" placeholder="Customer name">
+      <label>Phone</label><input type="text" id="mPhone" placeholder="07911 123456">
+      <label>Product they bought</label><input type="text" id="mProduct" placeholder="e.g. grey fluffy rug">
+      <div style="margin-top:12px"><button class="btn" id="manualBtn">Add customer</button></div>
+    </div>
+  </section>
+
+  <!-- TEMPLATES -->
+  <section class="panel" id="panel-templates">
+    <div class="card">
+      <h2>Your 3-message sequence</h2>
+      <div class="hint">Use <span class="tag">{name}</span> and <span class="tag">{product}</span> — they're filled in automatically per customer. Edit freely; changes save on their own.</div>
+
+      <div class="tpl-block">
+        <label>Message 1 — Reconnect (send first, to everyone)</label>
+        <textarea id="tpl1"></textarea>
+      </div>
+      <div class="tpl-block">
+        <label>Message 2 — Exclusive offer (3–5 days later)</label>
+        <textarea id="tpl2"></textarea>
+      </div>
+      <div class="tpl-block">
+        <label>Message 3 — Last reminder (2–3 days after that)</label>
+        <textarea id="tpl3"></textarea>
+      </div>
+      <button class="btn green" id="saveTpl">Save messages</button>
+      <div class="note">Tip: change a few words every 20–30 sends so messages aren't identical.</div>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section class="panel" id="panel-guide">
+    <div class="card">
+      <h2>How to run this</h2>
+      <div class="hint" style="margin-bottom:0">
+        <p style="margin-bottom:8px"><b>Day 1–3:</b> Send Message 1 to ~40–50 people per day. Tap “Send M1” — WhatsApp opens with the text ready, you just press send. Mark replies as they come in.</p>
+        <p style="margin-bottom:8px"><b>Day 4–8:</b> Send Message 2 (the offer) to everyone who got M1 — the filter “Due next message” shows exactly who's next.</p>
+        <p style="margin-bottom:8px"><b>Day 7–11:</b> Message 3 only to people who haven't replied or ordered. Then stop — don't chase further.</p>
+        <p style="margin-bottom:8px"><b>When someone orders:</b> tap “Ordered”. Your conversion rate shows at the top — 3–8% is normal for a warm list.</p>
+        <p style="margin-bottom:8px"><b>Opt-outs:</b> if anyone says stop, tap “Opt out” — they're excluded from everything after. This keeps you compliant with UK marketing rules.</p>
+        <p><b>Monthly after that:</b> reuse Message 2 with a new offer (new stock, seasonal, Eid/Ramadan) — max 2–3 messages a month per customer.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='reactivation-loom-v1';
+const state={contacts:[],templates:null,daily:{date:'',count:0}};
+
+const DEFAULT_TPLS={
+  t1:"Salam {name}! This is Ali — you ordered a {product} from us a while back. Just checking it's still serving you well? 😊 We look after past customers with early access to new stock and private discounts. (Reply STOP anytime to opt out.)",
+  t2:"Hi {name}! As one of our previous customers, you get 25% OFF this week — not available on our store page. New rugs and bedding just landed 🧵 Want me to send you photos of what would match your {product}?",
+  t3:"Hi {name}, quick reminder — your 25% past-customer discount ends tomorrow night. If you'd like to grab anything, just reply here and I'll sort it personally. No worries if not! 🙌"
+};
+
+/* ---------- storage ---------- */
+async function load(){
+  try{
+    const r=await window.storage.get(KEY);
+    if(r&&r.value){const d=JSON.parse(r.value);
+      state.contacts=d.contacts||[];state.templates=d.templates||{...DEFAULT_TPLS};state.daily=d.daily||{date:'',count:0};}
+    else{state.templates={...DEFAULT_TPLS};}
+  }catch(e){state.templates={...DEFAULT_TPLS};}
+  render();fillTpls();
+}
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{await window.storage.set(KEY,JSON.stringify({contacts:state.contacts,templates:state.templates,daily:state.daily}));}
+    catch(e){console.error('save failed',e);}
+  },300);
+}
+
+/* ---------- helpers ---------- */
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function normPhone(raw){
+  let d=(raw||'').replace(/[^\d]/g,'');
+  if(!d)return null;
+  if(d.startsWith('00'))d=d.slice(2);
+  if(d.startsWith('07')&&d.length===11)d='44'+d.slice(1);       // UK mobile
+  else if(d.startsWith('03')&&d.length===11)d='92'+d.slice(1);  // PK mobile
+  else if(d.startsWith('7')&&d.length===10)d='44'+d;
+  if(d.length<10||d.length>15)return null;
+  return d;
+}
+function fillVars(tpl,c){
+  return tpl.replaceAll('{name}',c.name||'there').replaceAll('{product}',c.product||'order');
+}
+function today(){return new Date().toISOString().slice(0,10);}
+function bumpDaily(){
+  if(state.daily.date!==today()){state.daily={date:today(),count:0};}
+  state.daily.count++;save();updateDaily();
+}
+function updateDaily(){
+  const w=document.getElementById('dailyWarn');
+  const c=state.daily.date===today()?state.daily.count:0;
+  document.getElementById('dailyCount').textContent=c;
+  w.classList.toggle('show',c>=40);
+}
+
+/* ---------- import ---------- */
+document.getElementById('importBtn').onclick=()=>{
+  const lines=document.getElementById('importBox').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  let added=0,skipped=0;
+  for(const line of lines){
+    const parts=line.split(',').map(p=>p.trim());
+    const name=parts[0]||'';
+    const phone=normPhone(parts[1]||parts[0]);
+    const product=parts[2]||'';
+    if(!phone){skipped++;continue;}
+    if(state.contacts.some(c=>c.phone===phone)){skipped++;continue;}
+    state.contacts.push({id:Date.now()+Math.random(),name:name||'Customer',phone,product,stage:0,replied:false,ordered:false,optout:false});
+    added++;
+  }
+  save();render();
+  document.getElementById('importNote').textContent=`Added ${added} contact${added!==1?'s':''}${skipped?`, skipped ${skipped} (invalid or duplicate)`:''}.`;
+  if(added){document.getElementById('importBox').value='';toast(`${added} contacts added`);}
+};
+document.getElementById('manualBtn').onclick=()=>{
+  const phone=normPhone(document.getElementById('mPhone').value);
+  if(!phone){toast('Check the phone number');return;}
+  if(state.contacts.some(c=>c.phone===phone)){toast('Already in your list');return;}
+  state.contacts.push({id:Date.now(),name:document.getElementById('mName').value.trim()||'Customer',phone,product:document.getElementById('mProduct').value.trim(),stage:0,replied:false,ordered:false,optout:false});
+  ['mName','mPhone','mProduct'].forEach(i=>document.getElementById(i).value='');
+  save();render();toast('Customer added');
+};
+
+/* ---------- templates ---------- */
+function fillTpls(){
+  document.getElementById('tpl1').value=state.templates.t1;
+  document.getElementById('tpl2').value=state.templates.t2;
+  document.getElementById('tpl3').value=state.templates.t3;
+}
+document.getElementById('saveTpl').onclick=()=>{
+  state.templates={t1:document.getElementById('tpl1').value,t2:document.getElementById('tpl2').value,t3:document.getElementById('tpl3').value};
+  save();toast('Messages saved');
+};
+
+/* ---------- render ---------- */
+function badge(c){
+  if(c.optout)return'<span class="badge optout">Opted out</span>';
+  if(c.ordered)return'<span class="badge ordered">Ordered ✓</span>';
+  if(c.replied)return'<span class="badge replied">Replied</span>';
+  if(c.stage===0)return'<span class="badge new">Not messaged</span>';
+  return `<span class="badge s${c.stage}">Sent M${c.stage}</span>`;
+}
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const f=document.getElementById('filter').value;
+  const list=document.getElementById('list');
+  let rows=state.contacts.filter(c=>{
+    if(q&&!(c.name.toLowerCase().includes(q)||c.phone.includes(q)))return false;
+    if(f==='new')return c.stage===0&&!c.optout;
+    if(f==='due')return !c.optout&&!c.ordered&&!c.replied&&c.stage>0&&c.stage<3;
+    if(f==='replied')return c.replied&&!c.ordered;
+    if(f==='ordered')return c.ordered;
+    if(f==='optout')return c.optout;
+    return true;
+  });
+  document.getElementById('emptyState').style.display=state.contacts.length?'none':'block';
+  list.innerHTML=rows.map(c=>{
+    const nextStage=c.stage+1;
+    const canSend=!c.optout&&!c.ordered&&c.stage<3;
+    const stitches=[1,2,3].map(i=>`<div class="stitch ${c.stage>=i?'done':''} ${c.ordered&&i===3?'gold':''}"></div>`).join('');
+    return `<div class="contact">
+      <div class="c-top">
+        <div><div class="c-name">${esc(c.name)}</div>
+        <div class="c-meta">+${c.phone}${c.product?' · '+esc(c.product):''}</div></div>
+        ${badge(c)}
+      </div>
+      <div class="stitches">${stitches}</div>
+      <div class="c-actions">
+        ${canSend?`<button class="btn green small" onclick="sendMsg(${JSON.stringify(c.id)})">📲 Send M${nextStage}</button>`:''}
+        ${!c.optout&&!c.ordered?`<button class="btn ghost small" onclick="mark(${JSON.stringify(c.id)},'replied')">${c.replied?'✓ Replied':'Replied'}</button>`:''}
+        ${!c.optout?`<button class="btn ghost small" onclick="mark(${JSON.stringify(c.id)},'ordered')">${c.ordered?'✓ Ordered':'Ordered 💷'}</button>`:''}
+        <button class="btn ghost small" style="color:var(--madder)" onclick="mark(${JSON.stringify(c.id)},'optout')">${c.optout?'Undo opt-out':'Opt out'}</button>
+        <button class="btn ghost small" onclick="removeC(${JSON.stringify(c.id)})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  // stats
+  document.getElementById('stTotal').textContent=state.contacts.length;
+  document.getElementById('stSent').textContent=state.contacts.filter(c=>c.stage>0).length;
+  document.getElementById('stReplied').textContent=state.contacts.filter(c=>c.replied).length;
+  document.getElementById('stOrdered').textContent=state.contacts.filter(c=>c.ordered).length;
+  updateDaily();
+}
+function esc(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* ---------- actions ---------- */
+window.sendMsg=function(id){
+  const c=state.contacts.find(x=>x.id===id);if(!c)return;
+  const tpl=[state.templates.t1,state.templates.t2,state.templates.t3][c.stage];
+  const text=encodeURIComponent(fillVars(tpl,c));
+  window.open(`https://wa.me/${c.phone}?text=${text}`,'_blank');
+  c.stage=Math.min(c.stage+1,3);
+  bumpDaily();save();render();
+};
+window.mark=function(id,what){
+  const c=state.contacts.find(x=>x.id===id);if(!c)return;
+  c[what]=!c[what];
+  if(what==='ordered'&&c.ordered)c.replied=true;
+  save();render();
+};
+window.removeC=function(id){
+  state.contacts=state.contacts.filter(x=>x.id!==id);
+  save();render();
+};
+document.getElementById('exportBtn').onclick=()=>{
+  const head='name,phone,product,messages_sent,replied,ordered,opted_out\n';
+  const rows=state.contacts.map(c=>[c.name,'+'+c.phone,c.product,c.stage,c.replied?'yes':'no',c.ordered?'yes':'no',c.optout?'yes':'no'].map(v=>`"${(''+v).replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob=new Blob([head+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='customer-campaign.csv';a.click();
+};
+document.getElementById('clearBtn').onclick=async()=>{
+  if(!confirm('Delete ALL contacts and progress? This cannot be undone.'))return;
+  state.contacts=[];state.daily={date:'',count:0};
+  save();render();toast('All data deleted');
+};
+
+/* ---------- tabs & filters ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('panel-'+t.dataset.panel).classList.add('active');
+});
+document.getElementById('search').oninput=render;
+document.getElementById('filter').onchange=render;
+
+load();
+</script>
+</body>
+</html>
